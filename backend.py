@@ -1,7 +1,17 @@
 import os
+import nltk
+
+# Configure NLTK data path before any other imports
+nltk_data_dir = "/tmp/nltk_data"
+os.makedirs(nltk_data_dir, exist_ok=True)
+nltk.data.path.append(nltk_data_dir)
+try:
+    nltk.download("punkt_tab", download_dir=nltk_data_dir, quiet=True)
+except Exception as e:
+    print(f"Failed to download punkt_tab: {e}")
+
 from dotenv import load_dotenv
 import google.generativeai as genai
-import nltk
 from llama_index.core import (
     VectorStoreIndex,
     SimpleDirectoryReader,
@@ -11,15 +21,6 @@ from llama_index.core import (
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 import chromadb
-
-# Configure NLTK data path to avoid permission issues
-nltk_data_dir = "/tmp/nltk_data"
-os.makedirs(nltk_data_dir, exist_ok=True)
-nltk.data.path.append(nltk_data_dir)
-try:
-    nltk.download("punkt_tab", download_dir=nltk_data_dir, quiet=True)
-except Exception as e:
-    print(f"Failed to download punkt_tab: {e}")
 
 # Load environment variables
 load_dotenv()
