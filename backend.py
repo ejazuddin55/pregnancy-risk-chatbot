@@ -10,7 +10,8 @@ from llama_index.core import (
     StorageContext,
     Settings,
 )
-from llama_index.storage.vector_store.chroma import ChromaVectorStore
+from llama_index.vector_stores.chroma import ChromaVectorStore
+#from llama_index.storage.vector_store.chroma import ChromaVectorStore
 #from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 import chromadb
