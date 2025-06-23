@@ -1,12 +1,10 @@
 import nltk
 import os
 
-# Set a custom nltk_data path (writable on Streamlit Cloud)
-nltk_data_path = "/mount/temp/nltk_data"
+nltk_data_path = "/tmp/nltk_data"
 os.makedirs(nltk_data_path, exist_ok=True)
 nltk.data.path.append(nltk_data_path)
 
-# Download the required resource
 nltk.download("punkt", download_dir=nltk_data_path)
 
 import os
