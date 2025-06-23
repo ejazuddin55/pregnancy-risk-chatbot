@@ -1,10 +1,18 @@
-
-
 import os
-import sqlite3
 from dotenv import load_dotenv
 import google.generativeai as genai
 import nltk
+from llama_index.core import (
+    VectorStoreIndex,
+    SimpleDirectoryReader,
+    StorageContext,
+    Settings,
+)
+from llama_index.vector_stores.chroma import ChromaVectorStore
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+import chromadb
+
+# Configure NLTK data path to avoid permission issues
 nltk_data_dir = "/tmp/nltk_data"
 os.makedirs(nltk_data_dir, exist_ok=True)
 nltk.data.path.append(nltk_data_dir)
@@ -12,18 +20,6 @@ try:
     nltk.download("punkt_tab", download_dir=nltk_data_dir, quiet=True)
 except Exception as e:
     print(f"Failed to download punkt_tab: {e}")
-from llama_index.core import (
-    VectorStoreIndex,
-    SimpleDirectoryReader,
-    StorageContext,
-    Settings,
-)
-
-from llama_index.vector_stores.chroma import ChromaVectorStore
-#from llama_index.storage.vector_store.chroma import ChromaVectorStore
-#from llama_index.vector_stores.chroma import ChromaVectorStore
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-import chromadb
 
 # Load environment variables
 load_dotenv()
@@ -32,35 +28,7 @@ load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 # Chroma persistent directory
-PERSIST_DIR = os.path.join(os.getcwd(), "chroma_store")
-
-# Chat history DB setup (runs once)
-def init_db():
-    conn = sqlite3.connect("chat_history.db")
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS chat (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_question TEXT,
-            bot_response TEXT,
-            risk_level TEXT,
-            action TEXT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    conn.commit()
-    conn.close()
-
-# Save chat to SQLite
-def save_chat_to_db(user_question, bot_response, risk_level, action):
-    conn = sqlite3.connect("chat_history.db")
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO chat (user_question, bot_response, risk_level, action)
-        VALUES (?, ?, ?, ?)
-    ''', (user_question, bot_response, risk_level, action))
-    conn.commit()
-    conn.close()
+PERSIST_DIR = "/tmp/chroma_store"
 
 # Load documents
 def load_documents():
@@ -98,7 +66,6 @@ def build_or_load_index():
     return index
 
 # Assess risk level
-# Assess risk level (updated from assignment PDF)
 def assess_risk(response_text):
     response_text = response_text.lower()
 
@@ -122,8 +89,6 @@ def assess_risk(response_text):
     else:
         return "Low", "Self-monitor, routine prenatal follow-up"
 
-
-
 # Ask bot (single-question)
 def ask_bot(query):
     index = build_or_load_index()
@@ -143,17 +108,10 @@ Question: {query}
     response = model.generate_content(prompt)
     risk_level, action = assess_risk(response.text)
 
-    save_chat_to_db(query, response.text, risk_level, action)  # ✅ Save to DB
-
     return response.text, risk_level, action
-
-
-
-
 
 # Run test
 if __name__ == "__main__":
-    init_db()  # ✅ Initialize DB on first run
     question = "I have bleeding. Should I go to a hospital?"
     answer, risk_level, action = ask_bot(question)
     print("🤖 Bot:", answer)
