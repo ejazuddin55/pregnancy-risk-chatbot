@@ -4,12 +4,21 @@ import os
 import sqlite3
 from dotenv import load_dotenv
 import google.generativeai as genai
+import nltk
+nltk_data_dir = "/tmp/nltk_data"
+os.makedirs(nltk_data_dir, exist_ok=True)
+nltk.data.path.append(nltk_data_dir)
+try:
+    nltk.download("punkt_tab", download_dir=nltk_data_dir, quiet=True)
+except Exception as e:
+    print(f"Failed to download punkt_tab: {e}")
 from llama_index.core import (
     VectorStoreIndex,
     SimpleDirectoryReader,
     StorageContext,
     Settings,
 )
+
 from llama_index.vector_stores.chroma import ChromaVectorStore
 #from llama_index.storage.vector_store.chroma import ChromaVectorStore
 #from llama_index.vector_stores.chroma import ChromaVectorStore
