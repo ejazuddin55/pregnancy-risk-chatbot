@@ -6,3 +6,8 @@ openai
 torch
 torchvision
 nltk==3.8.1
+llama-index
+chromadb
+nltk
+streamlit
+google-generativeai
