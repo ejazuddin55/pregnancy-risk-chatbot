@@ -5,10 +5,9 @@ google-generativeai==0.3.2
 llama-index==0.10.32
 llama_index-vector-stores-chroma==0.1.6
 chromadb==0.4.24
-onnxruntime==1.16.3  # Add for chromadb
-pysqlite3  # Add for chromadb SQLite compatibility
+onnxruntime==1.16.3
 nltk==3.8.1
 langchain==0.1.16
 sentence-transformers==2.2.2
-tqdm
+tqdm==4.66.1  # Specify version for safety
 python-dotenv
