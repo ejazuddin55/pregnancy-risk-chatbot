@@ -1,1 +1,9 @@
 
+llama-index
+llama-index-embeddings-huggingface
+sentence-transformers
+streamlit
+pypdf
+python-dotenv
+transformers
+torch
