@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+*.pkl
+*.db
+.env
+backend/storage/
+newapp.py
+rag_backend.py
+vector_storage/
+chroma_store/

@@ -1,0 +1,53 @@
+# Step 1: Create a plain text file with pregnancy risk knowledge
+
+knowledge_text = """
+## Pregnancy Risk Knowledge Base
+
+### 🔹 Low Risk Symptoms
+- Mild nausea (1st trimester)
+- Light spotting (implantation)
+- Mild back pain (ligament stretching)
+- Constipation & gas (due to hormones)
+
+### 🔸 Medium Risk
+- Persistent vomiting > 3x/day
+- Blood pressure ≥140/90
+- Gestational diabetes signs: thirst, fatigue, urination
+- Mild bleeding in 2nd/3rd trimester
+
+### 🔴 High Risk / Emergency
+- Heavy bleeding + cramps
+- Severe abdominal pain (ectopic risk)
+- Blurry vision + headache + swelling (preeclampsia)
+- Fever >38.5°C
+- No fetal movement
+
+### ⚠️ Red Flag Combinations
+- Headache + swelling + vision → Preeclampsia
+- Bleeding + abdominal pain + low BP → Ectopic pregnancy
+- Fever + discharge + tenderness → Infection
+- No fetal movement after 28 weeks → Fetal distress
+
+### 🗓️ Risk by Trimester
+- 1st: Nausea, spotting, miscarriage risk
+- 2nd: Baby movement starts, diabetes risk
+- 3rd: Swelling, bleeding, stillbirth risk
+
+### 📍 Risk Labels
+- Low: Mild symptoms → Monitor at home
+- Medium: Spotting/BP → Call doctor in 24hr
+- High: Pain/Bleeding → Go to ER
+
+### 🤖 Proactive Questions Examples
+- Are you experiencing unusual bleeding or discharge?
+- How are your baby’s movements today?
+- Any constant headaches or blurred vision?
+- Any pelvic pressure or back pain?
+- Do you have a fever or foul-smelling discharge?
+"""
+
+# Save to file
+with open("risk_knowledge.txt", "w", encoding="utf-8") as f:
+    f.write(knowledge_text)
+
+print("✅ Knowledge base saved as 'risk_knowledge.txt'")
