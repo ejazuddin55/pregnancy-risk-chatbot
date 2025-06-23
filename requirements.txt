@@ -1,12 +1,7 @@
-
-llama-index-embeddings-huggingface
-sentence-transformers
-streamlit
-pypdf
-python-dotenv
-transformers
-torch
-google-generativeai
-chromadb
+streamlit==1.26.0
 llama-index==0.10.29
 chromadb==0.4.24
+google-generativeai==0.5.2
+openai
+torch
+torchvision
