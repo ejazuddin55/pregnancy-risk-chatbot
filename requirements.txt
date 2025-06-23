@@ -1,5 +1,4 @@
 
-llama-index
 llama-index-embeddings-huggingface
 sentence-transformers
 streamlit
@@ -9,3 +8,5 @@ transformers
 torch
 google-generativeai
 chromadb
+llama-index==0.10.29
+chromadb==0.4.24
