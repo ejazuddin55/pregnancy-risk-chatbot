@@ -134,6 +134,19 @@ Question: {query}
 
     return response.text, risk_level, action
 
+import nltk
+import os
+
+# Set writable path
+nltk_data_path = "/mount/temp/nltk_data"
+os.makedirs(nltk_data_path, exist_ok=True)
+nltk.data.path.append(nltk_data_path)
+
+# Download punkt manually
+nltk.download("punkt", download_dir=nltk_data_path)
+
+
+
 # Run test
 if __name__ == "__main__":
     init_db()  # ✅ Initialize DB on first run
