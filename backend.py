@@ -1,3 +1,14 @@
+import nltk
+import os
+
+# Set a custom nltk_data path (writable on Streamlit Cloud)
+nltk_data_path = "/mount/temp/nltk_data"
+os.makedirs(nltk_data_path, exist_ok=True)
+nltk.data.path.append(nltk_data_path)
+
+# Download the required resource
+nltk.download("punkt", download_dir=nltk_data_path)
+
 import os
 import sqlite3
 from dotenv import load_dotenv
