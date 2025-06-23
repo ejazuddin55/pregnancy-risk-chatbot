@@ -11,3 +11,9 @@ chromadb
 nltk
 streamlit
 google-generativeai
+llama-index==0.10.32
+chromadb
+nltk
+streamlit
+google-generativeai
+
