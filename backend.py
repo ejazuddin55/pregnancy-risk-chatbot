@@ -1,4 +1,7 @@
+backendfile
 import os
+os.environ["NLTK_DATA"] = "/app/nltk_data"
+
 import sqlite3
 from dotenv import load_dotenv
 import google.generativeai as genai
@@ -8,9 +11,12 @@ from llama_index.core import (
     StorageContext,
     Settings,
 )
+from llama_index.embeddings.huggingface.base import HuggingFaceEmbedding
+
 from llama_index.vector_stores.chroma import ChromaVectorStore
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 import chromadb
+
+
 
 # Load environment variables
 load_dotenv()
@@ -134,11 +140,4 @@ Question: {query}
 
     return response.text, risk_level, action
 
-# Run test
-if __name__ == "__main__":
-    init_db()  # ✅ Initialize DB on first run
-    question = "I have bleeding. Should I go to a hospital?"
-    answer, risk_level, action = ask_bot(question)
-    print("🤖 Bot:", answer)
-    print(f"Risk Level: {risk_level}")
-    print(f"Suggested Action: {action}")
+
