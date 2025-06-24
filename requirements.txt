@@ -1,6 +1,5 @@
 # Run the Streamlit app
-CMD ["streamlit", "run", "app.py", "--server.port=7860", "--server.address=0.0.0.0"]
- requ.txt
+
 streamlit==1.30.0
 llama-parse
 sentence-transformers
