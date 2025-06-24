@@ -1,13 +1,15 @@
-streamlit==1.26.0
-torch==2.0.1
-torchvision==0.15.2
-google-generativeai==0.3.2
-llama-index==0.10.32
-llama_index-vector-stores-chroma==0.1.6
-chromadb==0.4.24
-onnxruntime==1.16.3
-nltk==3.8.1
-langchain==0.1.16
-sentence-transformers==2.2.2
-tqdm==4.66.1
-python-dotenv
+# Run the Streamlit app
+CMD ["streamlit", "run", "app.py", "--server.port=7860", "--server.address=0.0.0.0"]
+ requ.txt
+streamlit==1.30.0
+llama-parse
+sentence-transformers
+pypdf
+chromadb
+nltk
+openai
+google-generativeai
+llama-index==0.10.14
+llama-index-embeddings-huggingface
+llama-index==0.10.14
+llama-index-vector-stores-chroma
