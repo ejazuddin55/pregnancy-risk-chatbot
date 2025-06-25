@@ -75,9 +75,8 @@ def ask_bot(query):
         - Other symptoms
         
         Provide:
-        1. Risk assessment (Low/Medium/High)
-        2. Recommended action
-        3. Clear explanation
+        1. Recommended action
+        2. Clear explanation
         """
         
         model = genai.GenerativeModel("gemini-1.5-flash")
