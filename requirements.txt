@@ -1,14 +1,8 @@
-# Run the Streamlit app
-
-streamlit==1.30.0
-llama-parse
-sentence-transformers
-pypdf
-chromadb
-nltk
-openai
+streamlit
+python-dotenv
 google-generativeai
-llama-index==0.10.14
+llama-index
 llama-index-embeddings-huggingface
-llama-index==0.10.14
 llama-index-vector-stores-chroma
+chromadb
+sentence-transformers
