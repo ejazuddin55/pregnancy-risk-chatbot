@@ -1,6 +1,148 @@
-import streamlit as st
-from backend import ask_bot, assess_risk
+# app.py - Consolidated Pregnancy Risk Assistant
 
+import streamlit as st
+import os
+import sqlite3
+from dotenv import load_dotenv
+import google.generativeai as genai
+from llama_index.core import (
+    VectorStoreIndex,
+    SimpleDirectoryReader,
+    StorageContext,
+    Settings,
+)
+from llama_index.embeddings.huggingface.base import HuggingFaceEmbedding
+from llama_index.vector_stores.chroma import ChromaVectorStore
+import chromadb
+
+# --- Backend Functions ---
+# Load environment variables
+load_dotenv()
+
+# Configure Gemini
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
+# Chroma persistent directory
+PERSIST_DIR = os.path.join(os.getcwd(), "chroma_store")
+
+# Chat history DB setup (runs once)
+def init_db():
+    conn = sqlite3.connect("chat_history.db")
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS chat (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_question TEXT,
+            bot_response TEXT,
+            risk_level TEXT,
+            action TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+# Save chat to SQLite
+def save_chat_to_db(user_question, bot_response, risk_level, action):
+    conn = sqlite3.connect("chat_history.db")
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO chat (user_question, bot_response, risk_level, action)
+        VALUES (?, ?, ?, ?)
+    ''', (user_question, bot_response, risk_level, action))
+    conn.commit()
+    conn.close()
+
+# Load documents - Modified for Streamlit Cloud
+def load_documents():
+    try:
+        # Try loading from local files first
+        docs = SimpleDirectoryReader(input_files=["risk_knowledge.txt"]).load_data()
+        docs += SimpleDirectoryReader(input_dir="data").load_data()
+        return docs
+    except:
+        st.warning("Could not load local documents. Using empty knowledge base.")
+        return []
+
+# Build or load index
+def build_or_load_index():
+    Settings.embed_model = HuggingFaceEmbedding(
+        model_name="sentence-transformers/all-MiniLM-L6-v2"
+    )
+
+    if not os.path.exists(PERSIST_DIR):
+        st.info("📚 Building Chroma index for the first time...")
+        documents = load_documents()
+        chroma_client = chromadb.PersistentClient(path=PERSIST_DIR)
+        chroma_collection = chroma_client.get_or_create_collection("pregnancy_risk")
+        vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+        storage_context = StorageContext.from_defaults(vector_store=vector_store)
+        index = VectorStoreIndex.from_documents(
+            documents, storage_context=storage_context
+        )
+        index.storage_context.persist(persist_dir=PERSIST_DIR)
+    else:
+        chroma_client = chromadb.PersistentClient(path=PERSIST_DIR)
+        chroma_collection = chroma_client.get_or_create_collection("pregnancy_risk")
+        vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+        storage_context = StorageContext.from_defaults(vector_store=vector_store)
+        index = VectorStoreIndex.from_vector_store(
+            vector_store=vector_store, storage_context=storage_context
+        )
+
+    return index
+
+# Assess risk level
+def assess_risk(response_text):
+    response_text = response_text.lower()
+
+    high_risk_phrases = [
+        "blurry vision", "severe swelling", "heavy vaginal bleeding", "cramping",
+        "severe abdominal pain", "ectopic pregnancy", "fever > 38.5", "fever with chills",
+        "intrauterine infection", "no fetal movement", "reduced fetal movement",
+        "fetal distress", "preeclampsia"
+    ]
+
+    medium_risk_phrases = [
+        "spotting", "mild vaginal bleeding", "persistent vomiting", "vomiting > 3x",
+        "elevated blood pressure", "blood pressure ≥140/90",
+        "gestational diabetes", "excessive thirst", "frequent urination"
+    ]
+
+    if any(phrase in response_text for phrase in high_risk_phrases):
+        return "High", "Visit ER or OB immediately"
+    elif any(phrase in response_text for phrase in medium_risk_phrases):
+        return "Medium", "Contact doctor within 24 hours"
+    else:
+        return "Low", "Self-monitor, routine prenatal follow-up"
+
+# Ask bot (single-question)
+def ask_bot(query):
+    try:
+        index = build_or_load_index()
+        retriever = index.as_retriever()
+        nodes = retriever.retrieve(query)
+
+        context = "\n\n".join([n.get_content() for n in nodes])
+        prompt = f"""You are a helpful assistant for pregnancy-related risks.
+
+Context:
+{context}
+
+Question: {query}
+"""
+
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        response = model.generate_content(prompt)
+        risk_level, action = assess_risk(response.text)
+
+        save_chat_to_db(query, response.text, risk_level, action)
+        return response.text, risk_level, action
+    except Exception as e:
+        st.error(f"Error in ask_bot: {str(e)}")
+        return f"An error occurred: {str(e)}", "Unknown", "Please try again later"
+
+# --- Frontend Code ---
 # Set page configuration
 st.set_page_config(
     page_title="Pregnancy Risk Assistant 🤰",
@@ -78,6 +220,7 @@ if "chat_history" not in st.session_state:
     st.session_state.current_question = 0
     st.session_state.responses_collected = False
     st.session_state.analyzing = False
+    init_db()  # Initialize database on first run
 
 # Symptom prompts from document (page 6)
 symptom_prompts = [
@@ -85,12 +228,11 @@ symptom_prompts = [
     "👶 How would you describe your baby's movements today compared to yesterday?",
     "😷 Have you had any headaches that won't go away or that affect your vision?",
     "🤒 Are you experiencing any other symptoms? (If yes, please describe briefly)"
-
 ]
 
 # Header and welcome message
 st.markdown('<div class="main-title">🤰 Pregnancy Risk Assistant</div>', unsafe_allow_html=True)
-st.markdown('<div class="welcome-text">💚 I’m here to help you and your baby stay safe!👼 Please answer the following questions about your symptoms. Type your answer and Click submit response or Press Ctrl+Enter to submit your Response 👩‍🍼.</div>', unsafe_allow_html=True)
+st.markdown('<div class="welcome-text">💚 I\'m here to help you and your baby stay safe!👼 Please answer the following questions about your symptoms. Type your answer and Click submit response or Press Ctrl+Enter to submit your Response 👩‍🍼.</div>', unsafe_allow_html=True)
 
 # Progress indicator
 st.progress(st.session_state.current_question / len(symptom_prompts))
@@ -105,7 +247,7 @@ if st.session_state.current_question < len(symptom_prompts):
             height=100,
             placeholder="Type your answer Like 'I have some bleeding' or 'My baby is moving less than usual'"
         )
-        submit = st.form_submit_button("Submit Response ")
+        submit = st.form_submit_button("Submit Response")
         
         if submit and user_input.strip():
             st.session_state.chat_history.append(("User", user_input))
@@ -168,30 +310,3 @@ st.markdown("""
         Created by Ejaz ud din 🌟 | ejazuddin870@yahoo.com
     </div>
 """, unsafe_allow_html=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
