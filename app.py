@@ -216,7 +216,7 @@ if st.session_state.current_question == len(symptom_prompts) and not st.session_
             st.session_state.analyzing = False
             st.session_state.answer = answer
             #st.session_state.risk_level = risk_level
-            st.session_state.action = action
+            #st.session_state.action = action
         except Exception as e:
             st.error(f"❌ An error occurred: {str(e)}. Please try again.")
             st.session_state.analyzing = False
