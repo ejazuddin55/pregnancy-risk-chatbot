@@ -1,96 +1,7 @@
-# app.py - Complete Pregnancy Risk Assistant (Frontend + Backend)
-
 import streamlit as st
-import os
-import sqlite3
-from dotenv import load_dotenv
-import google.generativeai as genai
+from backend import ask_bot, assess_risk
 
-# ==================== BACKEND FUNCTIONS ====================
-# Initialize environment
-load_dotenv()
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-
-# Database setup
-def init_db():
-    conn = sqlite3.connect("chat_history.db")
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS chat (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_question TEXT,
-            bot_response TEXT,
-            risk_level TEXT,
-            action TEXT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    conn.commit()
-    conn.close()
-
-def save_chat_to_db(user_question, bot_response, risk_level, action):
-    conn = sqlite3.connect("chat_history.db")
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO chat (user_question, bot_response, risk_level, action)
-        VALUES (?, ?, ?, ?)
-    ''', (user_question, bot_response, risk_level, action))
-    conn.commit()
-    conn.close()
-
-def assess_risk(response_text):
-    response_text = response_text.lower()
-
-    high_risk_phrases = [
-        "blurry vision", "severe swelling", "heavy vaginal bleeding", "cramping",
-        "severe abdominal pain", "ectopic pregnancy", "fever > 38.5", "fever with chills",
-        "intrauterine infection", "no fetal movement", "reduced fetal movement",
-        "fetal distress", "preeclampsia"
-    ]
-
-    medium_risk_phrases = [
-        "spotting", "mild vaginal bleeding", "persistent vomiting", "vomiting > 3x",
-        "elevated blood pressure", "blood pressure ≥140/90",
-        "gestational diabetes", "excessive thirst", "frequent urination"
-    ]
-
-    if any(phrase in response_text for phrase in high_risk_phrases):
-        return "High", "Visit ER or OB immediately"
-    elif any(phrase in response_text for phrase in medium_risk_phrases):
-        return "Medium", "Contact doctor within 24 hours"
-    else:
-        return "Low", "Self-monitor, routine prenatal follow-up"
-
-def ask_bot(query):
-    try:
-        prompt = f"""You are a helpful assistant for pregnancy-related risks.
-        
-        Please assess the following situation and provide advice:
-        {query}
-        
-        Consider these risk factors:
-        - Bleeding or discharge
-        - Baby movements
-        - Headaches/vision changes
-        - Other symptoms
-        
-        Provide:
-        1. Recommended action
-        2. Clear explanation
-        """
-        
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        response = model.generate_content(prompt)
-        risk_level, action = assess_risk(response.text)
-        
-        save_chat_to_db(query, response.text, risk_level, action)
-        return response.text, risk_level, action
-    except Exception as e:
-        st.error(f"Error in ask_bot: {str(e)}")
-        return f"An error occurred: {str(e)}", "Unknown", "Please try again later"
-
-# ==================== FRONTEND UI ====================
-# Set page configuration (EXACTLY AS IN YOUR ORIGINAL)
+# Set page configuration
 st.set_page_config(
     page_title="Pregnancy Risk Assistant 🤰",
     page_icon="🤰",
@@ -98,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS (EXACTLY AS IN YOUR ORIGINAL)
+# Custom CSS for styling and emoji enhancement
 st.markdown("""
     <style>
     .main-title {
@@ -161,30 +72,30 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Initialize session state (EXACTLY AS IN YOUR ORIGINAL)
+# Initialize session state
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
     st.session_state.current_question = 0
     st.session_state.responses_collected = False
     st.session_state.analyzing = False
-    init_db()  # Initialize database
 
-# Symptom prompts (EXACTLY AS IN YOUR ORIGINAL)
+# Symptom prompts from document (page 6)
 symptom_prompts = [
     "🩺 Are you currently experiencing any unusual bleeding or discharge?",
     "👶 How would you describe your baby's movements today compared to yesterday?",
     "😷 Have you had any headaches that won't go away or that affect your vision?",
     "🤒 Are you experiencing any other symptoms? (If yes, please describe briefly)"
+
 ]
 
-# Header and welcome message (EXACTLY AS IN YOUR ORIGINAL)
+# Header and welcome message
 st.markdown('<div class="main-title">🤰 Pregnancy Risk Assistant</div>', unsafe_allow_html=True)
-st.markdown('<div class="welcome-text">💚 I\'m here to help you and your baby stay safe!👼 Please answer the following questions about your symptoms. Type your answer and Click submit response or Press Ctrl+Enter to submit your Response 👩‍🍼.</div>', unsafe_allow_html=True)
+st.markdown('<div class="welcome-text">💚 I’m here to help you and your baby stay safe!👼 Please answer the following questions about your symptoms. Type your answer and Click submit response or Press Ctrl+Enter to submit your Response 👩‍🍼.</div>', unsafe_allow_html=True)
 
-# Progress indicator (EXACTLY AS IN YOUR ORIGINAL)
+# Progress indicator
 st.progress(st.session_state.current_question / len(symptom_prompts))
 
-# Question flow (EXACTLY AS IN YOUR ORIGINAL)
+# Ask symptom questions using a form
 if st.session_state.current_question < len(symptom_prompts):
     st.markdown(f'<div class="question-box">{symptom_prompts[st.session_state.current_question]}</div>', unsafe_allow_html=True)
     with st.form(key=f"input_form_{st.session_state.current_question}", clear_on_submit=True):
@@ -194,7 +105,7 @@ if st.session_state.current_question < len(symptom_prompts):
             height=100,
             placeholder="Type your answer Like 'I have some bleeding' or 'My baby is moving less than usual'"
         )
-        submit = st.form_submit_button("Submit Response")
+        submit = st.form_submit_button("Submit Response ")
         
         if submit and user_input.strip():
             st.session_state.chat_history.append(("User", user_input))
@@ -205,7 +116,7 @@ if st.session_state.current_question < len(symptom_prompts):
         elif submit and not user_input.strip():
             st.warning("⚠️ Please provide a response before submitting.")
 
-# Analysis and results (EXACTLY AS IN YOUR ORIGINAL)
+# Process responses with analyzing indicator
 if st.session_state.current_question == len(symptom_prompts) and not st.session_state.responses_collected:
     with st.spinner("💁‍♀️ AI analyzing your responses..."):
         query = "Assess pregnancy risk based on: " + "; ".join([msg for _, msg in st.session_state.chat_history])
@@ -217,11 +128,11 @@ if st.session_state.current_question == len(symptom_prompts) and not st.session_
             st.session_state.risk_level = risk_level
             st.session_state.action = action
         except Exception as e:
-            st.error(f"❌ An error occurred: {str(e)}. Please try again.")
+            st.error(f"❌ An error occurred: {str(e)}. Please try again or check the backend.")
             st.session_state.analyzing = False
         st.rerun()
 
-# Display results (EXACTLY AS IN YOUR ORIGINAL)
+# Display results
 if st.session_state.responses_collected:
     st.markdown('<div class="response-box">', unsafe_allow_html=True)
     st.write(f"📝 **Your Responses**:")
@@ -230,7 +141,7 @@ if st.session_state.responses_collected:
     st.write(f"💁‍♀️ **AI Agent Response**: {st.session_state.answer}")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Display risk level (EXACTLY AS IN YOUR ORIGINAL)
+    # Display risk level with color coding and emojis
     risk_class = {
         "Low": "risk-low",
         "Medium": "risk-medium",
@@ -243,7 +154,7 @@ if st.session_state.responses_collected:
     }.get(st.session_state.risk_level, "✅")
     st.markdown(f'<div class="{risk_class}">{risk_emoji} Risk Level: {st.session_state.risk_level}<br>Suggested Action: {st.session_state.action}</div>', unsafe_allow_html=True)
 
-    # Reset button (EXACTLY AS IN YOUR ORIGINAL)
+    # Reset button
     if st.button("🔄 Start Over", key="reset", help="Restart the questionnaire"):
         st.session_state.chat_history = []
         st.session_state.current_question = 0
@@ -251,9 +162,36 @@ if st.session_state.responses_collected:
         st.session_state.analyzing = False
         st.rerun()
 
-# Footer (EXACTLY AS IN YOUR ORIGINAL)
+# Footer
 st.markdown("""
     <div style='text-align: center; margin-top: 2em; color: #4A4A4A;'>
         Created by Ejaz ud din 🌟 | ejazuddin870@yahoo.com
     </div>
 """, unsafe_allow_html=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
