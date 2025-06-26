@@ -1,8 +1,10 @@
-streamlit
-python-dotenv
+streamlit==1.45.1
 google-generativeai
-llama-index
+chromadb==1.0.13
+llama_index==0.12.44
+nltk==3.9.1
+protobuf==6.31.1
+python-dotenv==1.1.1
 llama-index-embeddings-huggingface
 llama-index-vector-stores-chroma
-chromadb
 sentence-transformers
