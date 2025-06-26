@@ -119,8 +119,8 @@ If you'd like to test or improve this project on your own machine, follow these 
 ### 1. Clone the GitHub Repository
 
 ```bash
-git clone https://github.com/yourusername/pregnancy-risk-assistant.git
-cd pregnancy-risk-assistant
+https://github.com/ejazuddin55/pregnancy-risk-chatbot.git
+cd pregnancy-risk-chatbot
 ```
 
 Or download the ZIP file from GitHub and extract it.
