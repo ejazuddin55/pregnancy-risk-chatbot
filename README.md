@@ -184,21 +184,7 @@ To force rebuild the index, delete the chroma_store/ folder.
 
 ---
 
-## How to Deploy on Hugging Face Spaces
-
-1. Upload your files to a new Hugging Face Space
-2. Set GOOGLE_API_KEY in the Secrets section
-3. Name your main file app.py (or use a Dockerfile)
-4. Click Deploy — the app will auto-start
-
-Also works on:
-- Streamlit Cloud: https://streamlit.io/cloud
-- Render: https://render.com
-
----
-
 ## Developed By
 
 Ejaz ud din  
 Email: ejazuddin870@yahoo.com  
-https://huggingface.co/spaces/Ejazaa/Risk_pregnancy_docker
